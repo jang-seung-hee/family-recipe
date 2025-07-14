@@ -29,28 +29,23 @@ const Home: React.FC = () => {
           <img
             src="/image/main_title.png"
             alt="메인 타이틀"
-            className="w-full max-w-3xl mb-6 drop-shadow-2xl rounded-xl border border-white/40 bg-white/30 object-cover transition-all duration-300"
+            className="w-full max-w-3xl mb-6 rounded-xl object-cover transition-all duration-500 shadow-2xl hover:scale-105 hover:shadow-[0_8px_32px_rgba(0,0,0,0.35)] cursor-pointer"
             style={{ objectFit: 'cover', width: '100%', height: '270px', minHeight: '180px', maxHeight: '360px' }}
           />
           {/* QR코드 및 안내문구 (타이틀 이미지 바로 아래) */}
           <div className="flex flex-col items-center mb-4">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?data=https://family-recipe.netlify.app&size=160x160" alt="QR코드" className="w-30 h-30 mb-2 rounded-xl border border-gray-200 bg-white" />
+            <img src="https://api.qrserver.com/v1/create-qr-code/?data=https://family-recipe.netlify.app&size=160x160" alt="QR코드" className="w-20 h-20 mb-2 rounded-xl border border-gray-200 bg-white" />
             <div className="text-xs text-gray-500">구글 로그인은 크롬 등 브라우저에서 열어주세요!</div>
           </div>
           {/* 레시피 수 */}
-          <div className="flex items-center gap-2 mb-4 bg-white/70 px-4 py-2 rounded-full shadow-md">
-            <span className="text-sm md:text-base text-minimal-blue font-semibold">{t('home.recipeCountTitle')}</span>
-            <span className="text-2xl md:text-3xl font-bold text-minimal-blueDark">{recipeCount}</span>
-          </div>
-          {/* 등록된 레시피 보러가기 버튼/카드 */}
           <Link
             to="/recipes"
-            className="w-full max-w-xs mt-2 mb-2 px-6 py-4 bg-minimal-blue text-white font-bold rounded-2xl shadow-lg flex items-center justify-center gap-2 text-lg hover:bg-minimal-blueDark transition-colors duration-200 cursor-pointer group"
+            className="flex items-center justify-center gap-2 mb-4 bg-white px-8 py-2 rounded-full shadow-md transition-transform duration-200 hover:scale-105 hover:shadow-xl cursor-pointer min-w-[220px]"
+            aria-label="등록된 레시피 바로가기"
             style={{ textDecoration: 'none' }}
-            aria-label="등록된 레시피 보러가기"
           >
-            <span>레시피 보러가기</span>
-            <svg className="w-6 h-6 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+            <span className="text-sm md:text-base text-minimal-blue font-semibold">{t('home.recipeCountTitle')}</span>
+            <span className="text-2xl md:text-3xl font-bold text-minimal-blueDark">{recipeCount}</span>
           </Link>
         </div>
       </div>
