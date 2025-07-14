@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { db, storage } from '../firebase';
 import { collection, addDoc, Timestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { colors } from '../constants/materialTheme';
 import { downsizeImage } from '../utils/imageUtils';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect } from 'react';
@@ -48,10 +46,7 @@ const RecipeForm: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [preview, setPreview] = useState(false);
-  const [finalPhoto, setFinalPhoto] = useState<File | null>(null);
   const [finalPhotoPreview, setFinalPhotoPreview] = useState<string>('');
-  const [finalPhotoThumbnail, setFinalPhotoThumbnail] = useState<File | null>(null);
   const [finalPhotoThumbnailPreview, setFinalPhotoThumbnailPreview] = useState<string>('');
   const { user } = useAuth();
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
@@ -71,9 +66,7 @@ const RecipeForm: React.FC = () => {
         setDifficulty(data.difficulty || '');
         setIngredients(Array.isArray(data.ingredients) ? data.ingredients.join('\n') : (data.ingredients || ''));
         setCookingSteps(Array.isArray(data.cookingSteps) && data.cookingSteps.length > 0 ? data.cookingSteps : [{ text: '', photo: null, previewUrl: '' }]);
-        setFinalPhoto(null); // 기존 이미지는 미리보기로만 제공, 새로 업로드 시에만 변경
         setFinalPhotoPreview(data.finalPhoto || '');
-        setFinalPhotoThumbnail(null);
         setFinalPhotoThumbnailPreview(data.finalPhotoThumbnail || '');
       }
       setLoading(false);
@@ -99,11 +92,9 @@ const RecipeForm: React.FC = () => {
     if (step > 0) setStep(step - 1);
   };
   const handlePreview = () => {
-    setPreview(true);
     setStep(steps.length - 1);
   };
   const handleEdit = () => {
-    setPreview(false);
     setStep(0);
   };
 
@@ -158,7 +149,6 @@ const RecipeForm: React.FC = () => {
   };
   const handleCompleteCookingSteps = () => {
     setStep(3); // 미리보기 단계로 이동
-    setPreview(true);
   };
 
   // Progress bar width
@@ -233,9 +223,7 @@ const RecipeForm: React.FC = () => {
         setDifficulty('');
         setIngredients('');
         setCookingSteps([{ text: '', photo: null, previewUrl: '' }]);
-        setFinalPhoto(null);
         setFinalPhotoPreview('');
-        setFinalPhotoThumbnail(null);
         setFinalPhotoThumbnailPreview('');
       }
     } catch (err: any) {
@@ -253,18 +241,14 @@ const RecipeForm: React.FC = () => {
         const originalResizedDataUrl = await downsizeImage(file, 800, 600);
         const originalBlob = await (await fetch(originalResizedDataUrl)).blob();
         const originalFile = new File([originalBlob], file.name, { type: 'image/jpeg' });
-        setFinalPhoto(originalFile);
         // 2. 썸네일(600x400) 리사이즈
         const thumbDataUrl = await downsizeImage(file, 600, 400);
         const thumbBlob = await (await fetch(thumbDataUrl)).blob();
         const thumbFile = new File([thumbBlob], `thumb_${file.name}`, { type: 'image/jpeg' });
-        setFinalPhotoThumbnail(thumbFile);
         setFinalPhotoPreview(thumbDataUrl); // 미리보기는 썸네일로
         setFinalPhotoThumbnailPreview(thumbDataUrl);
       } catch (error) {
         console.error('이미지 리사이징 중 오류:', error);
-        setFinalPhoto(file);
-        setFinalPhotoThumbnail(file);
         const reader = new FileReader();
         reader.onloadend = () => {
           setFinalPhotoPreview(reader.result as string);

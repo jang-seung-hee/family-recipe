@@ -3,8 +3,6 @@ import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore,
   collection,
   doc,
-  setDoc,
-  getDoc,
   getDocs,
   addDoc,
   updateDoc,

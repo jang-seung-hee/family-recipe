@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import RecipeCard from '../components/RecipeCard';
 import ControlBar from '../components/ControlBar';
 import { colors } from '../constants/materialTheme';
 import { useAuth } from '../contexts/AuthContext';
@@ -111,11 +110,6 @@ const RecipeDetail: React.FC = () => {
   };
   const handleCancelDelete = () => {
     setShowDeleteModal(false);
-  };
-
-  const handleClosePopup = () => {
-    setShowFavoritePopup(false);
-    setShowUnfavoritePopup(false);
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Loading...</div>;

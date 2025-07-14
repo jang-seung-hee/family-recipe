@@ -1,11 +1,9 @@
-import React, { useEffect, useState, useMemo, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { db } from '../firebase';
 import { collection, onSnapshot, DocumentData } from 'firebase/firestore';
 import { colors } from '../constants/materialTheme';
 import FilterBar from '../components/FilterBar';
 import Pagination from '../components/Pagination';
-import ControlBar from '../components/ControlBar';
-import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const RecipeCard = React.lazy(() => import('../components/RecipeCard'));
@@ -20,11 +18,8 @@ const RecipeList: React.FC = () => {
   const [filters, setFilters] = useState({ category: '', search: '' });
   const [page, setPage] = useState(1);
 
-  // 최근 본 레시피(localStorage)
-  const [recentViewed, setRecentViewed] = useState<{ id: string; title: string }[]>([]);
   useEffect(() => {
     const data = localStorage.getItem('recentRecipes');
-    if (data) setRecentViewed(JSON.parse(data));
   }, []);
 
   useEffect(() => {
@@ -62,7 +57,6 @@ const RecipeList: React.FC = () => {
 
   useEffect(() => { setPage(1); }, [filters]);
 
-  const { user } = useAuth();
   const navigate = useNavigate();
 
   if (loading) return <div className="p-4">불러오는 중...</div>;

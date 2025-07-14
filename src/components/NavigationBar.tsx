@@ -3,24 +3,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 
-const navItems = [
-  { to: '/', label: '홈', icon: '🏠' },
-  { to: '/trends', label: '트렌드', icon: '🔥' },
-  { to: '/add', label: '등록', icon: '➕' },
-  { to: '/recipes', label: '레시피', icon: '📖' },
-  { to: '/favorites', label: '즐겨찾기', icon: <img src="/image/favorite_off.png" alt="즐겨찾기" className="w-7 h-7" /> },
-];
-
 const NavigationBar: React.FC = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { t } = useTranslation();
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/');
-  };
 
   return (
     <nav aria-label={t('nav.mainNav')} className="fixed bottom-0 left-0 w-full z-50 bg-white shadow flex flex-col items-center py-2">

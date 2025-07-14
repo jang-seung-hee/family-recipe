@@ -44,7 +44,7 @@ const Login: React.FC = () => {
           <>
             <Link to="/signup" className="text-minimal-blue hover:underline font-semibold">회원가입</Link>
             <span className="mx-2">|</span>
-            <a href="#" className="text-minimal-blue hover:underline font-semibold">비밀번호 재설정</a>
+            <button type="button" className="text-minimal-blue hover:underline font-semibold">비밀번호 재설정</button>
           </>
         }
       >
