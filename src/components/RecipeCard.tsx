@@ -12,7 +12,7 @@ interface RecipeCardProps {
   difficulty?: string;
 }
 
-const RecipeCard: React.FC<RecipeCardProps> = ({ image, title, description, tags, time, rating, difficulty }) => {
+const RecipeCard: React.FC<RecipeCardProps> = (props) => {
   const [displayImage, setDisplayImage] = useState<string | undefined>(undefined);
   const [imgLoading, setImgLoading] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -26,22 +26,22 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ image, title, description, tags
       setDisplayImage(undefined);
       return;
     }
-    if (image && typeof image !== 'string') {
-      const cacheKey = (image as File).name + (image as File).size;
+    if (props.image && typeof props.image !== 'string') {
+      const cacheKey = (props.image as File).name + (props.image as File).size;
       const cached = getCachedImage(cacheKey);
       if (cached) {
         setDisplayImage(cached);
       } else {
         setImgLoading(true);
-        downsizeImage(image, 600, 400)
+        downsizeImage(props.image, 600, 400)
           .then((dataUrl) => {
             setCachedImage(cacheKey, dataUrl);
             setDisplayImage(dataUrl);
           })
           .finally(() => setImgLoading(false));
       }
-    } else if (typeof image === 'string') {
-      const urlObj = new URL(image, window.location.origin);
+    } else if (typeof props.image === 'string') {
+      const urlObj = new URL(props.image, window.location.origin);
       urlObj.search = '';
       const cacheKey = `url_${urlObj.toString()}`;
       const cached = getCachedImage(cacheKey);
@@ -49,7 +49,7 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ image, title, description, tags
         setDisplayImage(cached);
       } else {
         setImgLoading(true);
-        fetch(image)
+        fetch(props.image)
           .then(res => {
             if (!res.ok) throw new Error('이미지 로드 실패');
             return res.blob();
@@ -61,12 +61,12 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ image, title, description, tags
           })
           .catch(error => {
             console.error('이미지 리사이징 실패:', error);
-            setDisplayImage(image); // 실패 시 원본 사용
+            setDisplayImage(props.image); // 실패 시 원본 사용
           })
           .finally(() => setImgLoading(false));
       }
     }
-  }, [image, isVisible]);
+  }, [props.image, isVisible]);
 
   return (
     <div
@@ -80,15 +80,15 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ image, title, description, tags
       <img
         ref={imgRef}
         src={displayImage && !imgLoading ? displayImage : getPlaceholderImage()}
-        alt={title}
+        alt={props.title}
         className="w-full h-48 object-cover rounded-xl mb-3 bg-blue-100"
         style={{ backgroundColor: colors.blueLight }}
         loading="lazy"
       />
-      <h2 className="text-xl font-bold mb-1" style={{ color: colors.blueDeep, fontFamily: fonts.main }}>{title}</h2>
-      {tags && tags.length > 0 && (
+      <h2 className="text-xl font-bold mb-1" style={{ color: colors.blueDeep, fontFamily: fonts.main }}>{props.title}</h2>
+      {props.tags && props.tags.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1">
-          {tags.map((tag, idx) => (
+          {props.tags.map((tag, idx) => (
             <span
               key={idx}
               className="inline-block rounded px-2 py-1 text-xs"
@@ -100,25 +100,25 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ image, title, description, tags
         </div>
       )}
       <div className="flex flex-wrap gap-2 text-sm mb-1">
-        {time && (
+        {props.time && (
           <span className="text-gray-600 flex items-center">
-            <span className="mr-1">⏰</span>{time}
+            <span className="mr-1">⏰</span>{props.time}
           </span>
         )}
-        {typeof rating === 'number' && (
+        {typeof props.rating === 'number' && (
           <span className="text-yellow-600 flex items-center">
-            <span className="mr-1">⭐</span>{rating}
+            <span className="mr-1">⭐</span>{props.rating}
           </span>
         )}
-        {difficulty && (
+        {props.difficulty && (
           <span className="text-blue-600 flex items-center">
-            <span className="mr-1">난이도:</span>{difficulty}
+            <span className="mr-1">난이도:</span>{props.difficulty}
           </span>
         )}
       </div>
-      {description && <p className="text-gray-700 mt-2">{description}</p>}
+      {props.description && <p className="text-gray-700 mt-2">{props.description}</p>}
     </div>
   );
 };
 
-export default RecipeCard; 
+export default React.memo(RecipeCard); 

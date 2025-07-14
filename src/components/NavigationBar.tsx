@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 const navItems = [
   { to: '/', label: '홈', icon: '🏠' },
@@ -14,6 +15,7 @@ const NavigationBar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     await logout();
@@ -21,50 +23,61 @@ const NavigationBar: React.FC = () => {
   };
 
   return (
-    <nav
-      className="fixed bottom-0 left-0 right-0 bg-white shadow-minimal flex justify-around items-center h-16 z-50 rounded-t-2xl transition-all duration-200 border-t border-gray-100"
-    >
-      {navItems.map(item => (
-        <Link
-          key={item.to}
-          to={item.to}
-          className={`flex flex-col items-center text-xs md:text-sm font-semibold px-2 transition-all duration-200 ease-in-out
-            ${location.pathname === item.to ? 'text-minimal-blueDark font-bold' : 'text-minimal-blueDeep'}
-            hover:text-minimal-blue active:text-minimal-blueDark`}
-        >
-          <span className="text-2xl mb-1 transition-all duration-200">{item.icon}</span>
-          {item.label}
-        </Link>
-      ))}
-      <div className="flex items-center gap-2 ml-2">
-        {user ? (
-          <>
-            {/* 프로필(추후 구현) */}
-            <span className="hidden md:inline text-minimal-blue font-semibold">{user.email}</span>
+    <nav aria-label={t('nav.mainNav')} className="fixed bottom-0 left-0 w-full z-50 bg-white shadow flex flex-col items-center py-2">
+      <ul className="flex justify-center gap-6 mb-1">
+        <li>
+          <Link to="/" aria-label={t('nav.home')} className="flex flex-col items-center text-xs text-gray-700 hover:text-minimal-blue transition-colors">
+            <span className="text-xl">🏠</span>
+            <span>{t('nav.home')}</span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/trends" aria-label={t('nav.trends')} className="flex flex-col items-center text-xs text-gray-700 hover:text-minimal-blue transition-colors">
+            <span className="text-xl">🔥</span>
+            <span>{t('nav.trends')}</span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/add" aria-label={t('nav.add')} className="flex flex-col items-center text-xs text-gray-700 hover:text-minimal-blue transition-colors">
+            <span className="text-xl">➕</span>
+            <span>{t('nav.add')}</span>
+          </Link>
+        </li>
+        <li>
+          <Link to="/recipes" aria-label={t('nav.recipes')} className="flex flex-col items-center text-xs text-gray-700 hover:text-minimal-blue transition-colors">
+            <span className="text-xl">📖</span>
+            <span>{t('nav.recipes')}</span>
+          </Link>
+        </li>
+        {user && (
+          <li>
             <button
-              onClick={handleLogout}
-              className="px-3 py-1 rounded-lg bg-minimal-blue text-white font-bold hover:bg-minimal-blueDark transition-colors duration-200 text-xs md:text-sm"
+              onClick={() => navigate('/profile')}
+              className="flex flex-col items-center text-xs text-gray-700 hover:text-minimal-blue transition-colors focus:outline-none"
+              aria-label="마이홈"
             >
-              로그아웃
+              <span className="text-xl">👤</span>
+              <span>My</span>
             </button>
-          </>
-        ) : (
-          <>
-            <Link
-              to="/login"
-              className="px-3 py-1 rounded-lg bg-minimal-blue text-white font-bold hover:bg-minimal-blueDark transition-colors duration-200 text-xs md:text-sm"
-            >
-              로그인
-            </Link>
-            <Link
-              to="/signup"
-              className="px-3 py-1 rounded-lg bg-white border border-minimal-blue text-minimal-blue font-bold hover:bg-minimal-blueLight transition-colors duration-200 text-xs md:text-sm"
-            >
-              회원가입
-            </Link>
-          </>
+          </li>
         )}
-      </div>
+      </ul>
+      {!user && (
+        <div className="flex items-center gap-2">
+          <Link
+            to="/login"
+            className="px-3 py-1 rounded-lg bg-minimal-blue text-white font-bold hover:bg-minimal-blueDark transition-colors duration-200 text-xs md:text-sm"
+          >
+            로그인
+          </Link>
+          <Link
+            to="/signup"
+            className="px-3 py-1 rounded-lg bg-white border border-minimal-blue text-minimal-blue font-bold hover:bg-minimal-blueLight transition-colors duration-200 text-xs md:text-sm"
+          >
+            회원가입
+          </Link>
+        </div>
+      )}
     </nav>
   );
 };

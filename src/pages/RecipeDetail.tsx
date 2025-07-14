@@ -137,7 +137,9 @@ const RecipeDetail: React.FC = () => {
         <button
           className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center text-3xl font-extrabold bg-[#2196F3] text-white rounded-full shadow-lg border-4 border-white hover:bg-[#1976D2] hover:scale-110 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-200 z-50"
           onClick={() => {
-            if (location.state && location.state.fromFavoritesHome) {
+            if (location.state && location.state.fromProfile) {
+              navigate('/profile');
+            } else if (location.state && location.state.fromFavoritesHome) {
               navigate(-1);
             } else {
               navigate('/recipes');

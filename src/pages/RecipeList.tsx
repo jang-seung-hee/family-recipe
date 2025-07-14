@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import RecipeCard from '../components/RecipeCard';
+import React, { useEffect, useState, useMemo, Suspense } from 'react';
 import { db } from '../firebase';
 import { collection, onSnapshot, DocumentData } from 'firebase/firestore';
 import { colors } from '../constants/materialTheme';
@@ -8,6 +7,8 @@ import Pagination from '../components/Pagination';
 import ControlBar from '../components/ControlBar';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+
+const RecipeCard = React.lazy(() => import('../components/RecipeCard'));
 
 const CATEGORIES = ['집밥', '술안주', '디저트', '간식', '반찬', '기타'];
 
@@ -86,26 +87,11 @@ const RecipeList: React.FC = () => {
             등록된 레시피가 없습니다.
           </div>
         ) : (
-          paged.map((recipe, idx) => {
-            // 1순위: 완성사진
-            let cardImage = recipe.finalPhoto;
-            // 2순위: 조리과정 중 랜덤 사진
-            if (!cardImage && Array.isArray(recipe.cookingSteps)) {
-              const stepPhotos = recipe.cookingSteps
-                .map((s: any) => s.photo)
-                .filter((p: string) => typeof p === 'string' && p.length > 0);
-              if (stepPhotos.length > 0) {
-                cardImage = stepPhotos[Math.floor(Math.random() * stepPhotos.length)];
-              }
-            }
-            // 3순위: noimage.png
-            if (!cardImage) {
-              cardImage = '/image/noimage.png';
-            }
-            return (
+          <Suspense fallback={<div>로딩 중...</div>}>
+            {paged.map((recipe, idx) => (
               <div key={recipe.id || idx} onClick={() => navigate(`/recipes/${recipe.id}`)} className="cursor-pointer">
                 <RecipeCard
-                  image={cardImage}
+                  image={recipe.finalPhoto}
                   title={recipe.title || ''}
                   tags={recipe.tags || []}
                   time={recipe.time || ''}
@@ -113,8 +99,8 @@ const RecipeList: React.FC = () => {
                   difficulty={recipe.difficulty || ''}
                 />
               </div>
-            );
-          })
+            ))}
+          </Suspense>
         )}
       </div>
       <div className="max-w-2xl mx-auto">

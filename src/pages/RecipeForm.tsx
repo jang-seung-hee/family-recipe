@@ -7,6 +7,10 @@ import { downsizeImage } from '../utils/imageUtils';
 import { useAuth } from '../contexts/AuthContext';
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { z } from 'zod';
+import Loading from '../components/Loading';
+import ErrorMessage from '../components/ErrorMessage';
+import Toast from '../components/Toast';
 // (즐겨찾기 관련 임포트, 상태, 함수 등은 모두 삭제)
 
 const steps = [
@@ -21,6 +25,14 @@ interface CookingStep {
   photo?: File | null;
   previewUrl?: string;
 }
+
+const recipeSchema = z.object({
+  title: z.string().min(1, '제목을 입력하세요.'),
+  category: z.string().min(1, '카테고리를 선택하세요.'),
+  time: z.string().min(1, '조리시간을 입력하세요.'),
+  difficulty: z.string().min(1, '난이도를 선택하세요.'),
+  ingredients: z.string().min(1, '재료를 입력하세요.'),
+});
 
 const RecipeForm: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
@@ -42,6 +54,7 @@ const RecipeForm: React.FC = () => {
   const [finalPhotoThumbnail, setFinalPhotoThumbnail] = useState<File | null>(null);
   const [finalPhotoThumbnailPreview, setFinalPhotoThumbnailPreview] = useState<string>('');
   const { user } = useAuth();
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   // (즐겨찾기 관련 상태, 함수 등은 모두 삭제)
 
   // 레시피가 즐겨찾기인지 Firestore에서 확인
@@ -151,11 +164,29 @@ const RecipeForm: React.FC = () => {
   // Progress bar width
   const progress = ((step + 1) / steps.length) * 100;
 
+  const validateForm = () => {
+    const result = recipeSchema.safeParse({ title, category, time, difficulty, ingredients });
+    if (!result.success) {
+      const errors: { [key: string]: string } = {};
+      result.error.issues.forEach((e) => {
+        if (e.path[0]) errors[e.path[0] as string] = e.message;
+      });
+      setFormErrors(errors);
+      return false;
+    }
+    setFormErrors({});
+    return true;
+  };
+
   // 최종 제출
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setError(null);
     setLoading(true);
+    if (!validateForm()) {
+      setLoading(false);
+      return;
+    }
     try {
       // 재료: 각 항목 앞뒤 공백 및 - 문자 제거
       const cleanedIngredients = ingredients
@@ -180,7 +211,7 @@ const RecipeForm: React.FC = () => {
         cookingSteps: cleanedCookingSteps,
         finalPhoto: finalPhotoPreview,
         finalPhotoThumbnail: finalPhotoThumbnailPreview,
-        uid: user?.uid || '',
+        userId: user?.uid || '',
         updatedAt: Timestamp.now(),
       };
       if (id) {
@@ -244,6 +275,11 @@ const RecipeForm: React.FC = () => {
     }
   };
 
+  // loading 상태 처리
+  if (loading) {
+    return <Loading />;
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center py-6 px-2 md:px-0" style={{ background: '#F5F5F5' }}>
       <div className="w-full max-w-lg mt-8">
@@ -274,6 +310,7 @@ const RecipeForm: React.FC = () => {
                     required
                     placeholder="예) 엄마표 김치찌개"
                   />
+                  {formErrors.title && <div className="text-red-500 text-xs mt-1">{formErrors.title}</div>}
                 </div>
                 <div className="mb-4">
                   <label className="block mb-1 font-semibold" style={{ color: '#1A202C' }}>카테고리</label>
@@ -291,6 +328,7 @@ const RecipeForm: React.FC = () => {
                     <option value="반찬">반찬</option>
                     <option value="기타">기타</option>
                   </select>
+                  {formErrors.category && <div className="text-red-500 text-xs mt-1">{formErrors.category}</div>}
                 </div>
                 <div className="mb-4 flex flex-col md:flex-row md:space-x-2 space-y-2 md:space-y-0">
                   <div className="flex-1">
@@ -314,6 +352,7 @@ const RecipeForm: React.FC = () => {
                       <option value="2시간">2시간</option>
                       <option value="기타">기타</option>
                     </select>
+                    {formErrors.time && <div className="text-red-500 text-xs mt-1">{formErrors.time}</div>}
                   </div>
                   <div className="flex-1">
                     <label className="block mb-1 font-semibold" style={{ color: '#1A202C' }}>난이도</label>
@@ -328,6 +367,7 @@ const RecipeForm: React.FC = () => {
                       <option value="보통">보통</option>
                       <option value="어려움">어려움</option>
                     </select>
+                    {formErrors.difficulty && <div className="text-red-500 text-xs mt-1">{formErrors.difficulty}</div>}
                   </div>
                 </div>
               </div>
@@ -380,6 +420,7 @@ const RecipeForm: React.FC = () => {
                   rows={8}
                   placeholder={"예) 돼지고기\n김치\n두부"}
                 />
+                {formErrors.ingredients && <div className="text-red-500 text-xs mt-1">{formErrors.ingredients}</div>}
               </div>
               {/* Action Buttons */}
               <div className="flex justify-end gap-3 mt-2">
@@ -590,8 +631,8 @@ const RecipeForm: React.FC = () => {
             </>
           )}
 
-          {error && <div className="text-red-500 mb-2">{error}</div>}
-          {success && <div className="text-green-600 mb-2">레시피가 성공적으로 등록되었습니다!</div>}
+          {error && <ErrorMessage message={error} onRetry={handleSubmit} />}
+          {success && <Toast message="레시피가 성공적으로 등록되었습니다!" type="success" onClose={() => setSuccess(false)} />}
         </form>
       </div>
     </div>
