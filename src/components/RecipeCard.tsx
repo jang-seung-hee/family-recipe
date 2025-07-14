@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { colors, shadows, fonts } from '../constants/materialTheme';
-import { downsizeImage, getCachedImage, setCachedImage } from '../utils/imageUtils';
+import { downsizeImage, getCachedImage, setCachedImage, useLazyImage, getPlaceholderImage } from '../utils/imageUtils';
 
 interface RecipeCardProps {
   image?: string;
@@ -13,10 +13,19 @@ interface RecipeCardProps {
 }
 
 const RecipeCard: React.FC<RecipeCardProps> = ({ image, title, description, tags, time, rating, difficulty }) => {
-  const [displayImage, setDisplayImage] = useState<string | undefined>(typeof image === 'string' ? image : undefined);
+  const [displayImage, setDisplayImage] = useState<string | undefined>(undefined);
   const [imgLoading, setImgLoading] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const imgRef = useRef<HTMLImageElement>(null);
+
+  // Lazy load trigger
+  useLazyImage(imgRef, useCallback(() => setIsVisible(true), []));
 
   useEffect(() => {
+    if (!isVisible) {
+      setDisplayImage(undefined);
+      return;
+    }
     if (image && typeof image !== 'string') {
       const cacheKey = (image as File).name + (image as File).size;
       const cached = getCachedImage(cacheKey);
@@ -32,9 +41,32 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ image, title, description, tags
           .finally(() => setImgLoading(false));
       }
     } else if (typeof image === 'string') {
-      setDisplayImage(image);
+      const urlObj = new URL(image, window.location.origin);
+      urlObj.search = '';
+      const cacheKey = `url_${urlObj.toString()}`;
+      const cached = getCachedImage(cacheKey);
+      if (cached) {
+        setDisplayImage(cached);
+      } else {
+        setImgLoading(true);
+        fetch(image)
+          .then(res => {
+            if (!res.ok) throw new Error('이미지 로드 실패');
+            return res.blob();
+          })
+          .then(blob => downsizeImage(blob, 600, 400))
+          .then((dataUrl) => {
+            setCachedImage(cacheKey, dataUrl);
+            setDisplayImage(dataUrl);
+          })
+          .catch(error => {
+            console.error('이미지 리사이징 실패:', error);
+            setDisplayImage(image); // 실패 시 원본 사용
+          })
+          .finally(() => setImgLoading(false));
+      }
     }
-  }, [image]);
+  }, [image, isVisible]);
 
   return (
     <div
@@ -45,18 +77,14 @@ const RecipeCard: React.FC<RecipeCardProps> = ({ image, title, description, tags
         fontFamily: fonts.main,
       }}
     >
-      {displayImage && !imgLoading ? (
-        <img
-          src={displayImage}
-          alt={title}
-          className="w-full h-48 object-cover rounded-xl mb-3 bg-blue-100"
-          style={{ backgroundColor: colors.blueLight }}
-        />
-      ) : imgLoading ? (
-        <div className="w-full h-48 flex items-center justify-center rounded-xl mb-3 bg-blue-50 text-blue-400 animate-pulse">
-          이미지 처리 중...
-        </div>
-      ) : null}
+      <img
+        ref={imgRef}
+        src={displayImage && !imgLoading ? displayImage : getPlaceholderImage()}
+        alt={title}
+        className="w-full h-48 object-cover rounded-xl mb-3 bg-blue-100"
+        style={{ backgroundColor: colors.blueLight }}
+        loading="lazy"
+      />
       <h2 className="text-xl font-bold mb-1" style={{ color: colors.blueDeep, fontFamily: fonts.main }}>{title}</h2>
       {tags && tags.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1">

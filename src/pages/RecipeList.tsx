@@ -7,6 +7,7 @@ import FilterBar from '../components/FilterBar';
 import Pagination from '../components/Pagination';
 import ControlBar from '../components/ControlBar';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const CATEGORIES = ['집밥', '술안주', '디저트', '간식', '반찬', '기타'];
 
@@ -15,7 +16,6 @@ const RecipeList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<DocumentData | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
   const [filters, setFilters] = useState({ category: '', search: '' });
   const [page, setPage] = useState(1);
 
@@ -42,13 +42,13 @@ const RecipeList: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!modalOpen) return;
+    if (!selectedRecipe) return;
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setModalOpen(false);
+      if (e.key === 'Escape') setSelectedRecipe(null);
     };
     window.addEventListener('keydown', handleEsc);
     return () => window.removeEventListener('keydown', handleEsc);
-  }, [modalOpen]);
+  }, [selectedRecipe]);
 
   // 필터링 및 페이징
   const filtered = recipes.filter(recipe => {
@@ -62,6 +62,7 @@ const RecipeList: React.FC = () => {
   useEffect(() => { setPage(1); }, [filters]);
 
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   if (loading) return <div className="p-4">불러오는 중...</div>;
   if (error) return <div className="p-4 text-red-500">{error}</div>;
@@ -102,7 +103,7 @@ const RecipeList: React.FC = () => {
               cardImage = '/image/noimage.png';
             }
             return (
-              <div key={recipe.id || idx} onClick={() => { setSelectedRecipe(recipe); setModalOpen(true); }} className="cursor-pointer">
+              <div key={recipe.id || idx} onClick={() => navigate(`/recipes/${recipe.id}`)} className="cursor-pointer">
                 <RecipeCard
                   image={cardImage}
                   title={recipe.title || ''}
@@ -119,66 +120,6 @@ const RecipeList: React.FC = () => {
       <div className="max-w-2xl mx-auto">
         <Pagination current={page} total={totalPages} onChange={setPage} />
       </div>
-      {/* Fullscreen Modal */}
-      {modalOpen && selectedRecipe && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70"
-          onClick={e => { if (e.target === e.currentTarget) setModalOpen(false); }}
-        >
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 relative animate-fadeIn">
-            <button
-              className="absolute top-4 right-4 w-11 h-11 flex items-center justify-center text-3xl font-extrabold bg-[#2196F3] text-white rounded-full shadow-lg border-4 border-white hover:bg-[#1976D2] hover:scale-110 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-200 z-50"
-              onClick={() => setModalOpen(false)}
-              aria-label="닫기"
-            >
-              &times;
-            </button>
-            <div className="mb-4">
-              <img
-                src={selectedRecipe.finalPhoto || (Array.isArray(selectedRecipe.cookingSteps) && selectedRecipe.cookingSteps.find((s: any) => s.photo)?.photo) || '/image/noimage.png'}
-                alt={selectedRecipe.title}
-                className="w-full h-64 object-cover rounded-xl bg-blue-100"
-              />
-            </div>
-            <h2 className="text-2xl font-bold mb-2" style={{ color: colors.blueDeep }}>{selectedRecipe.title}</h2>
-            <div className="mb-2 text-sm text-gray-600">
-              <span className="mr-2">카테고리: {selectedRecipe.category}</span>
-              <span className="mr-2">⏰ {selectedRecipe.time}</span>
-              <span className="mr-2">난이도: {selectedRecipe.difficulty}</span>
-            </div>
-            <div className="mb-4">
-              <b>재료:</b>
-              <ul className="list-disc ml-5 mt-1 text-gray-700">
-                {(selectedRecipe.ingredients || []).map((item: string, idx: number) => (
-                  <li key={idx}>{item}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="mb-4">
-              <b>조리과정:</b>
-              <ol className="list-decimal ml-5 mt-1 text-gray-700">
-                {(selectedRecipe.cookingSteps || []).map((step: any, idx: number) => (
-                  <li key={idx} className="mb-2">
-                    <div>{step.text}</div>
-                    {step.photo && (
-                      <img src={step.photo} alt={`조리과정${idx+1}`} className="w-32 h-32 object-cover rounded-lg border border-[#E0E0E0] mt-1" />
-                    )}
-                  </li>
-                ))}
-              </ol>
-            </div>
-            <ControlBar
-              isOwner={user && selectedRecipe.uid && user.uid === selectedRecipe.uid}
-              isFavorite={false}
-              onEdit={() => {}}
-              onDelete={() => {}}
-              onComment={() => {}}
-              onFavorite={() => {}}
-              onRate={() => {}}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

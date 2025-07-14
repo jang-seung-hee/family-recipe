@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 // 이미지 다운사이징 및 캐시 유틸리티
 // Modern Minimal Blue 테마 프로젝트 기준
 
@@ -48,4 +49,36 @@ export function getCachedImage(key: string): string | undefined {
 
 export function setCachedImage(key: string, dataUrl: string): void {
   imageCache.set(key, dataUrl);
+}
+
+/**
+ * 이미지 lazy loading을 위한 React 커스텀 훅
+ * @param imageRef 이미지 DOM ref
+ * @param onVisible 콜백 (이미지가 뷰포트에 들어오면 호출)
+ */
+export function useLazyImage(imageRef: React.RefObject<HTMLImageElement | null>, onVisible: () => void) {
+  useEffect(() => {
+    if (!imageRef.current) return;
+    const observer = new window.IntersectionObserver(
+      (entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            onVisible();
+            observer.disconnect();
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+    observer.observe(imageRef.current);
+    return () => observer.disconnect();
+  }, [imageRef, onVisible]);
+}
+
+/**
+ * 기본 placeholder 이미지 (연한 회색, 600x400, base64 DataURL)
+ */
+export function getPlaceholderImage(): string {
+  // 600x400 연회색 SVG
+  return 'data:image/svg+xml;utf8,<svg width="600" height="400" xmlns="http://www.w3.org/2000/svg"><rect width="600" height="400" fill="%23e0e7ef"/></svg>';
 } 

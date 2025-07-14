@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { db, storage } from '../firebase';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, Timestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { colors } from '../constants/materialTheme';
 import { downsizeImage } from '../utils/imageUtils';
 import { useAuth } from '../contexts/AuthContext';
+import { useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+// (즐겨찾기 관련 임포트, 상태, 함수 등은 모두 삭제)
 
 const steps = [
   '기본 정보',
@@ -20,6 +23,8 @@ interface CookingStep {
 }
 
 const RecipeForm: React.FC = () => {
+  const { id } = useParams<{ id?: string }>();
+  const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
@@ -34,7 +39,43 @@ const RecipeForm: React.FC = () => {
   const [preview, setPreview] = useState(false);
   const [finalPhoto, setFinalPhoto] = useState<File | null>(null);
   const [finalPhotoPreview, setFinalPhotoPreview] = useState<string>('');
+  const [finalPhotoThumbnail, setFinalPhotoThumbnail] = useState<File | null>(null);
+  const [finalPhotoThumbnailPreview, setFinalPhotoThumbnailPreview] = useState<string>('');
   const { user } = useAuth();
+  // (즐겨찾기 관련 상태, 함수 등은 모두 삭제)
+
+  // 레시피가 즐겨찾기인지 Firestore에서 확인
+  useEffect(() => {
+    if (!id) return; // 생성 모드
+    // 수정 모드: 기존 레시피 데이터 불러오기
+    setLoading(true);
+    getDoc(doc(db, 'recipes', id)).then((docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setTitle(data.title || '');
+        setCategory(data.category || '');
+        setTime(data.time || '');
+        setDifficulty(data.difficulty || '');
+        setIngredients(Array.isArray(data.ingredients) ? data.ingredients.join('\n') : (data.ingredients || ''));
+        setCookingSteps(Array.isArray(data.cookingSteps) && data.cookingSteps.length > 0 ? data.cookingSteps : [{ text: '', photo: null, previewUrl: '' }]);
+        setFinalPhoto(null); // 기존 이미지는 미리보기로만 제공, 새로 업로드 시에만 변경
+        setFinalPhotoPreview(data.finalPhoto || '');
+        setFinalPhotoThumbnail(null);
+        setFinalPhotoThumbnailPreview(data.finalPhotoThumbnail || '');
+      }
+      setLoading(false);
+    });
+  }, [id]);
+
+  // 즐겨찾기 추가
+  const handleAddFavorite = async (categoryId: string) => {
+    // 즐겨찾기 관련 코드 삭제
+  };
+
+  // 즐겨찾기 해제
+  const handleRemoveFavorite = async () => {
+    // 즐겨찾기 관련 코드 삭제
+  };
 
   // Step navigation
   const handleNext = () => {
@@ -113,83 +154,90 @@ const RecipeForm: React.FC = () => {
   // 최종 제출
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setLoading(true);
     setError(null);
-    setSuccess(false);
+    setLoading(true);
     try {
-      // 조리과정 사진 업로드
-      const cookingStepData = await Promise.all(
-        cookingSteps
-          .filter(s => s.text.trim())
-          .map(async (s) => {
-            let photoUrl = '';
-            if (s.photo) {
-              const photoRef = ref(storage, `recipes/steps/${Date.now()}_${s.photo.name}`);
-              await uploadBytes(photoRef, s.photo);
-              photoUrl = await getDownloadURL(photoRef);
-            }
-            return { text: s.text, photo: photoUrl };
-          })
-      );
-      // 완성사진 업로드
-      let finalPhotoUrl = '';
-      if (finalPhoto) {
-        const finalPhotoRef = ref(storage, `recipes/final/${Date.now()}_${finalPhoto.name}`);
-        await uploadBytes(finalPhotoRef, finalPhoto);
-        finalPhotoUrl = await getDownloadURL(finalPhotoRef);
+      // 재료: 각 항목 앞뒤 공백 및 - 문자 제거
+      const cleanedIngredients = ingredients
+        .split('\n')
+        .map(i => i.replace(/^[-\s]+/, '').trim())
+        .filter(Boolean);
+      // 조리과정: text가 비어있는 단계 제외
+      const cleanedCookingSteps = cookingSteps
+        .filter(s => s.text && s.text.trim())
+        .map(s => ({ ...s, text: s.text.trim() }));
+      if (cleanedCookingSteps.length === 0) {
+        setError('조리과정은 1개 이상 입력해야 합니다.');
+        setLoading(false);
+        return;
       }
-      await addDoc(collection(db, 'recipes'), {
+      const recipeData = {
         title,
         category,
         time,
         difficulty,
-        ingredients: ingredients.split('\n').map(i => i.trim()).filter(Boolean),
-        cookingSteps: cookingStepData,
-        finalPhoto: finalPhotoUrl,
-        createdAt: Timestamp.now(),
-        uid: user?.uid || null,
-      });
-      setSuccess(true);
-      setTitle('');
-      setCategory('');
-      setTime('');
-      setDifficulty('');
-      setIngredients('');
-      setCookingSteps([{ text: '', photo: null, previewUrl: '' }]);
-      setCurrentCookingStepIdx(0);
-      setStep(0);
-      setPreview(false);
-      setFinalPhoto(null);
-      setFinalPhotoPreview('');
+        ingredients: cleanedIngredients,
+        cookingSteps: cleanedCookingSteps,
+        finalPhoto: finalPhotoPreview,
+        finalPhotoThumbnail: finalPhotoThumbnailPreview,
+        uid: user?.uid || '',
+        updatedAt: Timestamp.now(),
+      };
+      if (id) {
+        await updateDoc(doc(db, 'recipes', id), recipeData);
+        setSuccess(true);
+        setLoading(false);
+        alert('레시피가 성공적으로 수정되었습니다!');
+        navigate(`/recipes/${id}`);
+      } else {
+        await addDoc(collection(db, 'recipes'), {
+          ...recipeData,
+          createdAt: Timestamp.now(),
+        });
+        setSuccess(true);
+        setLoading(false);
+        setTitle('');
+        setCategory('');
+        setTime('');
+        setDifficulty('');
+        setIngredients('');
+        setCookingSteps([{ text: '', photo: null, previewUrl: '' }]);
+        setFinalPhoto(null);
+        setFinalPhotoPreview('');
+        setFinalPhotoThumbnail(null);
+        setFinalPhotoThumbnailPreview('');
+      }
     } catch (err: any) {
-      setError('등록 중 오류가 발생했습니다. 다시 시도해 주세요.');
-    } finally {
+      setError('저장 중 오류가 발생했습니다.');
       setLoading(false);
+      alert('저장 중 오류가 발생했습니다.');
     }
   };
 
   const handleFinalPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      
       try {
-        // 완성사진 다운사이징 (최대 800x600으로 변경)
-        const resizedImageDataUrl = await downsizeImage(file, 800, 600);
-        
-        // DataURL을 Blob으로 변환하여 File 객체 생성
-        const response = await fetch(resizedImageDataUrl);
-        const blob = await response.blob();
-        const resizedFile = new File([blob], file.name, { type: 'image/jpeg' });
-        
-        setFinalPhoto(resizedFile);
-        setFinalPhotoPreview(resizedImageDataUrl);
+        // 1. 상세용(800x600) 리사이즈
+        const originalResizedDataUrl = await downsizeImage(file, 800, 600);
+        const originalBlob = await (await fetch(originalResizedDataUrl)).blob();
+        const originalFile = new File([originalBlob], file.name, { type: 'image/jpeg' });
+        setFinalPhoto(originalFile);
+        // 2. 썸네일(600x400) 리사이즈
+        const thumbDataUrl = await downsizeImage(file, 600, 400);
+        const thumbBlob = await (await fetch(thumbDataUrl)).blob();
+        const thumbFile = new File([thumbBlob], `thumb_${file.name}`, { type: 'image/jpeg' });
+        setFinalPhotoThumbnail(thumbFile);
+        setFinalPhotoPreview(thumbDataUrl); // 미리보기는 썸네일로
+        setFinalPhotoThumbnailPreview(thumbDataUrl);
       } catch (error) {
         console.error('이미지 리사이징 중 오류:', error);
-        // 리사이징 실패 시 원본 파일 사용
         setFinalPhoto(file);
+        setFinalPhotoThumbnail(file);
         const reader = new FileReader();
         reader.onloadend = () => {
           setFinalPhotoPreview(reader.result as string);
+          setFinalPhotoThumbnailPreview(reader.result as string);
         };
         reader.readAsDataURL(file);
       }
@@ -285,6 +333,16 @@ const RecipeForm: React.FC = () => {
               </div>
               {/* Action Buttons */}
               <div className="flex justify-end gap-3 mt-2">
+                {id && (
+                  <button
+                    type="button"
+                    className="px-6 py-2 rounded-lg font-bold bg-gray-300 text-gray-800 border border-[#E0E0E0] hover:bg-gray-400"
+                    onClick={() => navigate(`/recipes/${id}`)}
+                    disabled={loading}
+                  >
+                    취소
+                  </button>
+                )}
                 <button
                   type="button"
                   className="px-6 py-2 rounded-lg font-bold bg-[#FF9800] text-white transition-colors duration-200 hover:bg-[#FB8C00] active:bg-[#F57C00]"
@@ -319,12 +377,22 @@ const RecipeForm: React.FC = () => {
                   className="w-full rounded-lg px-3 py-2 border border-[#E0E0E0] focus:border-[#FF9800] transition-all duration-200 bg-white placeholder:text-gray-400 text-[#1A202C]"
                   value={ingredients}
                   onChange={e => setIngredients(e.target.value)}
-                  rows={4}
+                  rows={8}
                   placeholder={"예) 돼지고기\n김치\n두부"}
                 />
               </div>
               {/* Action Buttons */}
-              <div className="flex justify-between gap-3 mt-2">
+              <div className="flex justify-end gap-3 mt-2">
+                {id && (
+                  <button
+                    type="button"
+                    className="px-6 py-2 rounded-lg font-bold bg-gray-300 text-gray-800 border border-[#E0E0E0] hover:bg-gray-400"
+                    onClick={() => navigate(`/recipes/${id}`)}
+                    disabled={loading}
+                  >
+                    취소
+                  </button>
+                )}
                 <button
                   type="button"
                   className="px-6 py-2 rounded-lg font-bold bg-[#FFECB3] text-[#1A202C] border border-[#E0E0E0] hover:bg-[#FFE082]"
@@ -386,7 +454,7 @@ const RecipeForm: React.FC = () => {
                     className="w-full rounded-lg px-3 py-2 border border-[#E0E0E0] focus:border-[#FF9800] transition-all duration-200 bg-white placeholder:text-gray-400 text-[#1A202C]"
                     value={cookingSteps[currentCookingStepIdx]?.text || ''}
                     onChange={e => handleCookingStepChange(e.target.value)}
-                    rows={3}
+                    rows={6}
                     placeholder="예) 냄비에 물을 붓고 끓입니다."
                   />
                   {cookingSteps[currentCookingStepIdx]?.previewUrl && (
@@ -413,7 +481,17 @@ const RecipeForm: React.FC = () => {
                 </div>
               </div>
               {/* Action Buttons */}
-              <div className="flex justify-between gap-3 mt-2">
+              <div className="flex justify-end gap-3 mt-2">
+                {id && (
+                  <button
+                    type="button"
+                    className="px-6 py-2 rounded-lg font-bold bg-gray-300 text-gray-800 border border-[#E0E0E0] hover:bg-gray-400"
+                    onClick={() => navigate(`/recipes/${id}`)}
+                    disabled={loading}
+                  >
+                    취소
+                  </button>
+                )}
                 <button
                   type="button"
                   className={`px-6 py-2 rounded-lg font-bold bg-[#FFECB3] text-[#1A202C] border border-[#E0E0E0] hover:bg-[#FFE082] ${currentCookingStepIdx === 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -483,6 +561,16 @@ const RecipeForm: React.FC = () => {
               </div>
               {/* Action Buttons */}
               <div className="flex justify-end gap-3 mt-2">
+                {id && (
+                  <button
+                    type="button"
+                    className="px-6 py-2 rounded-lg font-bold bg-gray-300 text-gray-800 border border-[#E0E0E0] hover:bg-gray-400"
+                    onClick={() => navigate(`/recipes/${id}`)}
+                    disabled={loading}
+                  >
+                    취소
+                  </button>
+                )}
                 <button
                   type="button"
                   className="px-6 py-2 rounded-lg font-bold bg-[#FFECB3] text-[#1A202C] border border-[#E0E0E0] hover:bg-[#FFE082]"

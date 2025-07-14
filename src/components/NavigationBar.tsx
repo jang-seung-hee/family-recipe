@@ -7,6 +7,7 @@ const navItems = [
   { to: '/trends', label: '트렌드', icon: '🔥' },
   { to: '/add', label: '등록', icon: '➕' },
   { to: '/recipes', label: '레시피', icon: '📖' },
+  { to: '/favorites', label: '즐겨찾기', icon: <img src="/image/favorite_off.png" alt="즐겨찾기" className="w-7 h-7" /> },
 ];
 
 const NavigationBar: React.FC = () => {

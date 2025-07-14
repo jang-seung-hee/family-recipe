@@ -9,6 +9,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Profile from './pages/Profile';
+import FavoritesHome from './pages/FavoritesHome';
+import RecipeDetail from './pages/RecipeDetail';
 
 function App() {
   return (
@@ -32,6 +34,21 @@ function App() {
             <Route path="/recipes" element={
               <ProtectedRoute>
                 <RecipeList />
+              </ProtectedRoute>
+            } />
+            <Route path="/recipes/:id" element={
+              <ProtectedRoute>
+                <RecipeDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/favorites" element={
+              <ProtectedRoute>
+                <FavoritesHome />
+              </ProtectedRoute>
+            } />
+            <Route path="/edit/:id" element={
+              <ProtectedRoute>
+                <RecipeForm />
               </ProtectedRoute>
             } />
           </Routes>
