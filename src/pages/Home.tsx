@@ -30,7 +30,7 @@ const Home: React.FC = () => {
             src="/image/main_title.png"
             alt="메인 타이틀"
             className="w-full max-w-3xl mb-6 drop-shadow-2xl rounded-xl border border-white/40 bg-white/30 object-cover transition-all duration-300"
-            style={{ objectFit: 'cover', width: '100%', height: '300px', minHeight: '200px', maxHeight: '400px' }}
+            style={{ objectFit: 'cover', width: '100%', height: '270px', minHeight: '180px', maxHeight: '360px' }}
           />
           {/* QR코드 및 안내문구 (타이틀 이미지 바로 아래) */}
           <div className="flex flex-col items-center mb-4">
