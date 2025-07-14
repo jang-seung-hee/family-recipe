@@ -206,7 +206,6 @@ const RecipeDetail: React.FC = () => {
               </div>
               {categoryError && <div className="text-red-500 text-sm mb-2">{categoryError}</div>}
             </div>
-            <button className="px-4 py-2 bg-minimal-blue text-white rounded-lg font-bold mr-2" onClick={handleAddFavorite}>등록</button>
             <button className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg font-bold" onClick={() => setShowFavoritePopup(false)}>취소</button>
           </div>
         </div>
@@ -217,7 +216,6 @@ const RecipeDetail: React.FC = () => {
           <div className="bg-white rounded-lg p-6 shadow-lg w-80 text-center">
             <h3 className="text-lg font-bold mb-4">즐겨찾기 해제</h3>
             <div className="mb-4 text-gray-600">이미 즐겨찾기에 등록되어 있습니다. 해제하시겠습니까?</div>
-            <button className="px-4 py-2 bg-red-500 text-white rounded-lg font-bold mr-2" onClick={handleRemoveFavorite}>해제</button>
             <button className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg font-bold" onClick={() => setShowUnfavoritePopup(false)}>취소</button>
           </div>
         </div>
