@@ -19,7 +19,6 @@ const RecipeList: React.FC = () => {
   const [page, setPage] = useState(1);
 
   useEffect(() => {
-    const data = localStorage.getItem('recentRecipes');
   }, []);
 
   useEffect(() => {
