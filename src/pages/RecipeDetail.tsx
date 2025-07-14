@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ControlBar from '../components/ControlBar';
 import { colors } from '../constants/materialTheme';
 import { useAuth } from '../contexts/AuthContext';
-import { addFavorite, removeFavorite, checkFavorite, getFavoriteCategories, addFavoriteCategory, deleteRecipeWithImage, deleteAllFavoritesForRecipe } from '../utils/favoriteUtils';
+import { checkFavorite, getFavoriteCategories, addFavoriteCategory, deleteRecipeWithImage, deleteAllFavoritesForRecipe } from '../utils/favoriteUtils';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { db } from '../firebase';
 import { doc, getDoc } from 'firebase/firestore';

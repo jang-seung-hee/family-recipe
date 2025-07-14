@@ -235,12 +235,8 @@ const RecipeForm: React.FC = () => {
       try {
         // 1. 상세용(800x600) 리사이즈
         const originalResizedDataUrl = await downsizeImage(file, 800, 600);
-        const originalBlob = await (await fetch(originalResizedDataUrl)).blob();
-        // 삭제됨
         // 2. 썸네일(600x400) 리사이즈
         const thumbDataUrl = await downsizeImage(file, 600, 400);
-        const thumbBlob = await (await fetch(thumbDataUrl)).blob();
-        // 무엇을 해야 할지 모르겠어요! (어떻게 해?)
         setFinalPhotoPreview(thumbDataUrl); // 미리보기는 썸네일로
         setFinalPhotoThumbnailPreview(thumbDataUrl);
       } catch (error) {
