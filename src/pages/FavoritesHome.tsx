@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { getFavoriteCategories, addFavoriteCategory, updateFavoriteCategory, deleteFavoriteCategory, getFavoriteRecipesByCategory } from '../utils/favoriteUtils';
 import RecipeCard from '../components/RecipeCard';
@@ -38,7 +38,7 @@ const FavoritesHome: React.FC = () => {
   };
 
   // 카테고리별 레시피 개수 불러오기
-  const fetchCategoryRecipeCounts = async (cats: any[]) => {
+  const fetchCategoryRecipeCounts = useCallback(async (cats: any[]) => {
     if (!user) return;
     const counts: { [key: string]: number } = {};
     for (const cat of cats) {
@@ -46,7 +46,7 @@ const FavoritesHome: React.FC = () => {
       counts[cat.id] = recipes.length;
     }
     setCategoryRecipeCounts(counts);
-  };
+  }, [user]);
 
   useEffect(() => {
     fetchCategories();
@@ -55,7 +55,7 @@ const FavoritesHome: React.FC = () => {
 
   useEffect(() => {
     if (categories.length > 0) fetchCategoryRecipeCounts(categories);
-  }, [categories]);
+  }, [categories, fetchCategoryRecipeCounts]);
 
   // mount 시 location.state.openCategoryId가 있으면 해당 카테고리 자동 오픈
   useEffect(() => {
@@ -63,11 +63,6 @@ const FavoritesHome: React.FC = () => {
       handleCategoryClick(location.state.openCategoryId);
     }
     // eslint-disable-next-line
-  }, [categories]);
-
-  // 카테고리 목록이 바뀔 때마다 개수도 갱신
-  useEffect(() => {
-    if (categories.length > 0) fetchCategoryRecipeCounts(categories);
   }, [categories]);
 
   // 카테고리 추가
