@@ -53,6 +53,10 @@ const FavoritesHome: React.FC = () => {
     // eslint-disable-next-line
   }, [user]);
 
+  useEffect(() => {
+    if (categories.length > 0) fetchCategoryRecipeCounts(categories);
+  }, [categories]);
+
   // mount 시 location.state.openCategoryId가 있으면 해당 카테고리 자동 오픈
   useEffect(() => {
     if (location.state && location.state.openCategoryId) {

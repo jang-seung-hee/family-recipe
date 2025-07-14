@@ -234,8 +234,6 @@ const RecipeForm: React.FC = () => {
       const file = e.target.files[0];
       try {
         // 1. 상세용(800x600) 리사이즈
-        const originalResizedDataUrl = await downsizeImage(file, 800, 600);
-        // 2. 썸네일(600x400) 리사이즈
         const thumbDataUrl = await downsizeImage(file, 600, 400);
         setFinalPhotoPreview(thumbDataUrl); // 미리보기는 썸네일로
         setFinalPhotoThumbnailPreview(thumbDataUrl);
