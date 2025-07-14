@@ -45,25 +45,9 @@ const RecipeDetail: React.FC = () => {
     }
   }, [user, recipe]);
 
-  // 즐겨찾기 추가
-  const handleAddFavorite = async () => {
-    if (!selectedCategory) {
-      setCategoryError('카테고리를 선택하세요!');
-      return;
-    }
-    if (!user) return;
-    await addFavorite(user.uid, recipe.id, selectedCategory);
-    setIsFavorite(true);
-    setShowFavoritePopup(false);
-  };
 
   // 즐겨찾기 해제
-  const handleRemoveFavorite = async () => {
-    if (!user) return;
-    await removeFavorite(user.uid, recipe.id);
-    setIsFavorite(false);
-    setShowUnfavoritePopup(false);
-  };
+  // 삭제해도 됩니다. (즐겨찾기 해제 핸들러)
 
   // 카테고리 추가
   const handleAddCategory = async () => {

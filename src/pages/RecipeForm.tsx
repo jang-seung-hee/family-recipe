@@ -74,14 +74,10 @@ const RecipeForm: React.FC = () => {
   }, [id]);
 
   // 즐겨찾기 추가
-  const handleAddFavorite = async (categoryId: string) => {
-    // 즐겨찾기 관련 코드 삭제
-  };
+  // 즐겨찾기 관련 코드 삭제
 
   // 즐겨찾기 해제
-  const handleRemoveFavorite = async () => {
-    // 즐겨찾기 관련 코드 삭제
-  };
+  // 즐겨찾기 관련 코드 삭제
 
   // Step navigation
   const handleNext = () => {
@@ -240,11 +236,11 @@ const RecipeForm: React.FC = () => {
         // 1. 상세용(800x600) 리사이즈
         const originalResizedDataUrl = await downsizeImage(file, 800, 600);
         const originalBlob = await (await fetch(originalResizedDataUrl)).blob();
-        const originalFile = new File([originalBlob], file.name, { type: 'image/jpeg' });
+        // 삭제됨
         // 2. 썸네일(600x400) 리사이즈
         const thumbDataUrl = await downsizeImage(file, 600, 400);
         const thumbBlob = await (await fetch(thumbDataUrl)).blob();
-        const thumbFile = new File([thumbBlob], `thumb_${file.name}`, { type: 'image/jpeg' });
+        // 무엇을 해야 할지 모르겠어요! (어떻게 해?)
         setFinalPhotoPreview(thumbDataUrl); // 미리보기는 썸네일로
         setFinalPhotoThumbnailPreview(thumbDataUrl);
       } catch (error) {

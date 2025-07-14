@@ -18,16 +18,21 @@ const FavoritesHome: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 카테고리 목록 불러오기
+  // 카테고리 목록 불러오기 (어떻게 해?)
   const fetchCategories = async () => {
     if (!user) return;
     setLoading(true);
     try {
+      // 1. getFavoriteCategories로 카테고리 목록을 가져온다.
+      // 네, 이 부분은 그대로 두어도 됩니다.
       const data = await getFavoriteCategories(user.uid);
+      // 2. 가져온 목록을 상태에 저장한다.
       setCategories(data);
     } catch (err) {
+      // 3. 실패 시 에러 메시지 표시
       setError('카테고리 불러오기 실패');
     } finally {
+      // 4. 로딩 상태 해제
       setLoading(false);
     }
   };
